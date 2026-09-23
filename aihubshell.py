@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-
-
-
 import argparse
 import os
 import re
@@ -13,13 +10,11 @@ from datetime import datetime
 from pathlib import Path
 
 
-
 # aihubshell -mode l | grep "전라도"
 # python aihubshell.py \
 #     120 \
 #     filekeys.txt \
 #     --output-dir /data/public/ghlee/AIHUB_2026/
-
 
 
 # --------------------------------------------------
@@ -29,7 +24,6 @@ from pathlib import Path
     # --dataset-key 데이터셋키 \
     # --group train_source \
     # --output-dir ./chungcheong
-
 
 
 # python download_aihub.py \
@@ -61,14 +55,11 @@ ERROR_PATTERNS = [
     r"CRC error",
 ]
 
-
-
 DEFAULT_RETRY = 5
 DEFAULT_RETRY_DELAY = 15
 
 def timestamp():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
 
 def append_log(log_path: Path, text: str):
     with log_path.open("a", encoding="utf-8") as f:
@@ -121,8 +112,6 @@ def load_completed(completed_path: Path):
             if key.isdigit():
                 completed.add(int(key))
 
-
-
     return completed
 
 def record_completed(
@@ -135,10 +124,6 @@ def record_completed(
             f"{filekey}\t{filename}\t{timestamp()}\n"
         )
 
-
-
-
-
 def record_failed(
     failed_path: Path,
     filekey: int,
@@ -149,22 +134,11 @@ def record_failed(
             f"{filekey}\t{timestamp()}\t{reason}\n"
         )
 
-
-
-
-
 def has_error_pattern(output: str):
     for pattern in ERROR_PATTERNS:
         if re.search(pattern, output, re.IGNORECASE):
             return True
-
-
-
     return False
-
-
-
-
 
 def run_aihubshell(
     dataset_key: str,
@@ -181,8 +155,6 @@ def run_aihubshell(
         "-aihubapikey", api_key,
     ]
 
-
-
     safe_cmd = [
         "aihubshell",
         "-mode", "d",
@@ -190,8 +162,6 @@ def run_aihubshell(
         "-filekey", str(filekey),
         "-aihubapikey", "********",
     ]
-
-
 
     header = (
         "\n"
@@ -202,13 +172,8 @@ def run_aihubshell(
         + " ".join(safe_cmd)
         + "\n"
     )
-
-
-
     print(header, end="")
     append_log(log_path, header)
-
-
 
     process = subprocess.Popen(
         cmd,
@@ -218,31 +183,17 @@ def run_aihubshell(
         text=True,
         bufsize=1,
     )
-
-
-
     output_lines = []
-
-
-
     assert process.stdout is not None
-
-
 
     for line in process.stdout:
         print(line, end="")
         append_log(log_path, line)
         output_lines.append(line)
 
-
-
     process.wait()
 
-
-
     output = "".join(output_lines)
-
-
 
     return {
         "returncode": process.returncode,
@@ -250,32 +201,19 @@ def run_aihubshell(
         "has_error": has_error_pattern(output),
     }
 
-
-
-
-
 def find_recent_zip_files(
     output_dir: Path,
     before_files: set,
 ):
     after_files = set(output_dir.rglob("*.zip"))
-
-
-
     new_files = list(after_files - before_files)
-
-
 
     if new_files:
         return new_files
 
-
-
     # 기존 파일을 덮어썼을 수도 있으므로
     # 최근 수정된 zip도 후보로 둔다.
     zip_files = list(output_dir.rglob("*.zip"))
-
-
 
     zip_files.sort(
         key=lambda p: p.stat().st_mtime,
@@ -283,35 +221,23 @@ def find_recent_zip_files(
     )
 
 
-
     return zip_files[:5]
-
-
-
-
 
 def test_zip(zip_path: Path, log_path: Path):
     if not zip_path.exists():
         return False, "zip file does not exist"
 
-
-
     if zip_path.stat().st_size == 0:
         return False, "zip file size is 0"
 
 
-
     print(f"\n[ZIP TEST] {zip_path}")
-
-
 
     cmd = [
         "unzip",
         "-t",
         str(zip_path),
     ]
-
-
 
     result = subprocess.run(
         cmd,
@@ -332,13 +258,7 @@ def test_zip(zip_path: Path, log_path: Path):
     if result.returncode == 0:
         return True, "OK"
 
-
-
     return False, result.stdout[-2000:]
-
-
-
-
 
 def find_part_files(output_dir: Path):
     candidates = []
@@ -351,7 +271,6 @@ def find_part_files(output_dir: Path):
     ]
 
 
-
     for pattern in patterns:
         candidates.extend(output_dir.rglob(pattern))
 
@@ -359,18 +278,12 @@ def find_part_files(output_dir: Path):
 
     return sorted(set(candidates))
 
-
-
-
-
 def print_disk_usage(path: Path):
     usage = shutil.disk_usage(path)
 
 
-
     def gb(x):
         return x / (1024 ** 3)
-
 
 
     print(
@@ -378,9 +291,6 @@ def print_disk_usage(path: Path):
         f"used={gb(usage.used):.1f} GB "
         f"free={gb(usage.free):.1f} GB"
     )
-
-
-
 
 
 def verify_candidate_zips(
@@ -418,9 +328,6 @@ def verify_candidate_zips(
         None,
         "No valid zip found among candidates",
     )
-
-
-
 
 
 def download_one(
